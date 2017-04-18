@@ -36,7 +36,7 @@ public class ImplNotesService implements INotesService {
     }
 
     @Override
-    public Notes getNotesByID(Integer id) {
+    public Notes getNotesByID(Long id) {
         return notesDao.getById(id);
     }
 }

@@ -11,7 +11,7 @@ import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
 
-public class NotesDao implements INotesDao<Notes,Integer>{
+public class NotesDao implements INotesDao<Notes,Long>{
     private SessionFactory sessionFactory = HibernateConfig.getSessionFactory();
 
     private Session getSession() {
@@ -60,7 +60,7 @@ public class NotesDao implements INotesDao<Notes,Integer>{
     }
 
     @Override
-    public Notes getById(Integer id) {
+    public Notes getById(Long id) {
         getSession().getTransaction().begin();
         Notes notes = (Notes)getCriteria(getSession()).add(Restrictions.eq("id",id)).uniqueResult();
         getSession().getTransaction().commit();

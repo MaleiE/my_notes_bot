@@ -16,6 +16,6 @@ public interface INotesService {
 
     public void deleteAll();
 
-    public Notes getNotesByID(Integer id);
+    public Notes getNotesByID(Long id);
 
 }

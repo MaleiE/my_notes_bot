@@ -3,9 +3,12 @@ package com.malei.bot.service.impl;
 import com.malei.bot.service.IUserService;
 import com.malei.bot.dao.impl.UserDao;
 import com.malei.bot.entities.User;
+import org.telegram.telegrambots.api.objects.Location;
 import org.telegram.telegrambots.api.objects.Message;
 
 import java.util.List;
+
+import static com.malei.bot.utilities.Utilities.getTimeZoneLocation;
 
 public class ImplUserService implements IUserService{
 
@@ -28,7 +31,7 @@ public class ImplUserService implements IUserService{
 
     @Override
     public List<User> getAllUser() {
-        return null;
+        return userDao.getAll();
     }
 
     @Override
@@ -43,11 +46,13 @@ public class ImplUserService implements IUserService{
         return userDao.getById(id);
     }
 
+
+
     @Override
     public Integer getStepUser(Integer telegramUserId, Message message) {
-        int i = 0;
+        int step = 0;
         if(userDao.getByTelegramId(telegramUserId)!=null){
-            i=userDao.getByTelegramId(telegramUserId).getStep();
+            step=userDao.getByTelegramId(telegramUserId).getStep();
         }else {
             User user = new User();
             user.setUserIdTelegram(message.getFrom().getId());
@@ -56,11 +61,27 @@ public class ImplUserService implements IUserService{
             userDao.create(user);
         }
 
-        return i;
+        return step;
     }
 
     @Override
     public User getUserNotesByTelegramId(Integer telegramId) {
         return userDao.getByTelegramId(telegramId);
+    }
+
+    @Override
+    public void setUserTimeZone(Message message) {
+        String timeZone = getTimeZoneLocation(message);
+        User user = userDao.getByTelegramId(message.getFrom().getId());
+        user.setTimeZone(timeZone);
+        userDao.update(user);
+    }
+
+    @Override
+    public String getUserTimeZone(Message message) {
+        return userDao.getByTelegramId(message.getFrom().getId()).getTimeZone();
+    }
+    public String getUserTimeZone(Integer telegramId) {
+        return userDao.getByTelegramId(telegramId).getTimeZone();
     }
 }

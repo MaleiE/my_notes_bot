@@ -4,6 +4,9 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+
 @Entity
 @Table(name = "user")
 public class User implements Serializable {
@@ -12,6 +15,9 @@ public class User implements Serializable {
     private List<Notes> notes;
     private String name;
     private Integer step;
+    private String timeZone;
+    private String local;
+    private static ConcurrentHashMap<Long,ScheduledFuture<?>> stringScheduledFuture = new ConcurrentHashMap<>();
 
     public User() {
     }
@@ -68,6 +74,32 @@ public class User implements Serializable {
         this.notes = notes;
     }
 
+    @Column(name = "TIME_ZONE_USER")
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
+    }
+
+    @Column(name = "USER")
+    public String getLocal() {
+        return local;
+    }
+
+    public void setLocal(String local) {
+        this.local = local;
+    }
+
+    @Transient
+    public ConcurrentHashMap<Long, ScheduledFuture<?>> getStringScheduledFuture() {
+        return stringScheduledFuture;
+    }
+
+    public void setStringScheduledFuture(Long idNotes, ScheduledFuture<?> scheduledFuture) {
+        User.stringScheduledFuture.put(idNotes, scheduledFuture);
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -78,14 +110,16 @@ public class User implements Serializable {
                 Objects.equals(userIdTelegram, user.userIdTelegram) &&
                 Objects.equals(notes, user.notes) &&
                 Objects.equals(name, user.name) &&
-                Objects.equals(step, user.step);
+                Objects.equals(step, user.step) &&
+                Objects.equals(timeZone, user.timeZone);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, userIdTelegram, notes, name, step);
+        return Objects.hash(id, userIdTelegram, notes, name, step, timeZone);
     }
-    /*
+
+  /*
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("User{");

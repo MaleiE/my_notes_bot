@@ -23,4 +23,9 @@ public interface IUserService {
 
     public User getUserNotesByTelegramId(Integer telegramId);
 
+    public void setUserTimeZone(Message message);
+
+    public String getUserTimeZone(Message message);
+
+
 }

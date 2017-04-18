@@ -6,16 +6,20 @@ import javax.persistence.*;
 
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+
+import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
 @Table(name = "notes")
-public class Notes {
+public class Notes implements Serializable{
     private Long id;
     private String textNotes;
-    private DateTime createDate;
-    private DateTime alertDate;
+//    private Timestamp createDate;
+    private Timestamp alertDate;
     private User user;
+    private Long chatId;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,24 +41,33 @@ public class Notes {
         this.textNotes = textNotes;
     }
 
-    @Column(name = "CREATE_DATE", nullable = true)
-    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
-    public DateTime getCreateDate() {
+  /*  @Column(name = "CREATE_DATE", nullable = true)
+  //  @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
+ /*   public Timestamp getCreateDate() {
         return createDate;
     }
-
-    public void setCreateDate(DateTime createDate) {
+*/
+  /*  public void setCreateDate(Timestamp createDate) {
         this.createDate = createDate;
-    }
+    }*/
 
     @Column(name = "ALERT_DATE", nullable = true)
-    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
-    public DateTime getAlertDate() {
+    //@Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
+    public Timestamp getAlertDate() {
         return alertDate;
     }
 
-    public void setAlertDate(DateTime alertDate) {
+    public void setAlertDate(Timestamp alertDate) {
         this.alertDate = alertDate;
+    }
+
+    @Column(name = "CHAT_ID")
+    public Long getChatId() {
+        return chatId;
+    }
+
+    public void setChatId(Long chatId) {
+        this.chatId = chatId;
     }
 
     @ManyToOne
@@ -74,14 +87,14 @@ public class Notes {
         Notes notes = (Notes) o;
         return Objects.equals(id, notes.id) &&
                 Objects.equals(textNotes, notes.textNotes) &&
-                Objects.equals(createDate, notes.createDate) &&
+               // Objects.equals(createDate, notes.createDate) &&
                 Objects.equals(alertDate, notes.alertDate) &&
                 Objects.equals(user, notes.user);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, textNotes, createDate, alertDate, user);
+        return Objects.hash(id, textNotes, alertDate, user);
     }
 
 
@@ -89,7 +102,7 @@ public class Notes {
     public String toString() {
         return "Notes{" + "id=" + id +
                 ", textNotes='" + textNotes + '\'' +
-                ", createDate=" + createDate +
+              //  ", createDate=" + createDate +
                 ", alertDate=" + alertDate +
                 ", user=" + user +
                 '}';

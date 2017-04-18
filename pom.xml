@@ -16,6 +16,12 @@
     </properties>
 
     <dependencies>
+        <!--google.maps -->
+        <dependency>
+            <groupId>com.google.maps</groupId>
+            <artifactId>google-maps-services</artifactId>
+            <version>0.1.18</version>
+        </dependency>
         <!-- telegram -->
         <dependency>
             <groupId>org.telegram</groupId>

@@ -25,7 +25,7 @@ public class HibernateConfig {
         prop.setProperty("hibernate.c3p0.idle_test_period", "1000");
         prop.setProperty("hibernate.c3p0.validate", "true");
         prop.setProperty("hibernate.current_session_context_class","thread");
-        prop.setProperty("hibernate.hbm2ddl.auto","create");
+      //  prop.setProperty("hibernate.hbm2ddl.auto","create");
         Configuration configuration = new Configuration();
         configuration.setProperties(prop);
         configuration.addAnnotatedClass(User.class);
