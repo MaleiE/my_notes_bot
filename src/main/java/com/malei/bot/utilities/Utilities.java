@@ -4,15 +4,17 @@ package com.malei.bot.utilities;
 import com.google.maps.GeoApiContext;
 import com.google.maps.errors.ApiException;
 import com.google.maps.model.LatLng;
+import org.jetbrains.annotations.NotNull;
 import org.telegram.telegrambots.api.objects.Message;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import static com.google.maps.TimeZoneApi.getTimeZone;
 
-/**
- * Created by User on 004 04.04.17.
- */
+
 public class Utilities {
     public static String checkingUserTime(String time){
 
@@ -118,5 +120,15 @@ public class Utilities {
                 break;
         }
         return stringMonth;
+    }
+
+    public static String local(String key, String local) throws UnsupportedEncodingException {
+        Locale locale = new Locale(local);
+        ResourceBundle resourceBundle = ResourceBundle.getBundle("localisation.message", locale);
+        String s = resourceBundle.getString(key);
+        String s1 = new String(s.getBytes("ISO-8859-1"), "UTF-8");
+
+        return new StringBuilder().append(s1).toString();
+
     }
 }

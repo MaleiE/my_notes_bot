@@ -7,11 +7,34 @@ import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import static com.malei.bot.utilities.Utilities.local;
+
 public class KeyboardAdd {
+
+    public static ReplyKeyboardMarkup getLangKeyboard() {
+        //ReplyKeyboardMarkup
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        replyKeyboardMarkup.setOneTimeKeyboad(false);
+        //KeyboardRow
+        List<KeyboardRow> keyboard = new ArrayList<KeyboardRow>(){{
+                KeyboardRow keyboard1 = new KeyboardRow();
+                add(keyboard1);
+                keyboard1.add(new KeyboardButton("English"));
+                KeyboardRow keyboard2 = new KeyboardRow();
+                keyboard2.add(new KeyboardButton("Русский"));
+                add(keyboard2);
+        }};
+        replyKeyboardMarkup.setKeyboard(keyboard);
+
+        return replyKeyboardMarkup;
+    }
 
     public static ReplyKeyboardMarkup getLocKeyboard() {
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
@@ -29,7 +52,7 @@ public class KeyboardAdd {
         return replyKeyboardMarkup;
     }
 
-    public static ReplyKeyboardMarkup getMainMenuKeyboard() {
+    public static ReplyKeyboardMarkup getMainMenuKeyboard(String lang) throws UnsupportedEncodingException {
         //ReplyKeyboardMarkup
         ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setSelective(true);
@@ -42,9 +65,9 @@ public class KeyboardAdd {
         KeyboardRow keyboardRow1 = new KeyboardRow();
         KeyboardRow keyboardRow2 = new KeyboardRow();
 
-        keyboardRow0.add(new KeyboardButton("Создать уведомление"));
-        keyboardRow1.add(new KeyboardButton("Настройки"));
-        keyboardRow2.add(new KeyboardButton("Все уведомления"));
+        keyboardRow0.add(new KeyboardButton(local("button.create",lang)));
+        keyboardRow1.add(new KeyboardButton(local("button.settings",lang)));
+        keyboardRow2.add(new KeyboardButton(local("button.allnotes",lang)));
 
         keyboard.add(keyboardRow0);
         keyboard.add(keyboardRow1);
@@ -86,7 +109,6 @@ public class KeyboardAdd {
         replyKeyboardMarkup.setSelective(true);
         replyKeyboardMarkup.setResizeKeyboard(true);
         replyKeyboardMarkup.setOneTimeKeyboad(false);
-        System.out.println(hour);
         //KeyboardRow
         List<KeyboardRow> keyboard = new ArrayList<KeyboardRow>(){{
             for (int i = hour;i<24;i++){

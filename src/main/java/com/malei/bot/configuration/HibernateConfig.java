@@ -11,6 +11,7 @@ import java.util.Properties;
 
 public class HibernateConfig {
     private static  final SessionFactory sessionFactory;
+
     static {
         Properties prop= new Properties();
         prop.setProperty("hibernate.connection.url", "jdbc:mysql://localhost:3306/telegram_notes");
@@ -25,7 +26,7 @@ public class HibernateConfig {
         prop.setProperty("hibernate.c3p0.idle_test_period", "1000");
         prop.setProperty("hibernate.c3p0.validate", "true");
         prop.setProperty("hibernate.current_session_context_class","thread");
-      //  prop.setProperty("hibernate.hbm2ddl.auto","create");
+        prop.setProperty("hibernate.hbm2ddl.auto","create");
         Configuration configuration = new Configuration();
         configuration.setProperties(prop);
         configuration.addAnnotatedClass(User.class);
@@ -33,9 +34,11 @@ public class HibernateConfig {
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(
                 configuration.getProperties()).build();
         sessionFactory = configuration.buildSessionFactory(serviceRegistry);
+
     }
 
     public static SessionFactory getSessionFactory() {
         return sessionFactory;
     }
+
 }

@@ -23,9 +23,14 @@ public interface IUserService {
 
     public User getUserNotesByTelegramId(Integer telegramId);
 
-    public void setUserTimeZone(Message message);
-
     public String getUserTimeZone(Message message);
 
+    public User getUserByTelegramIdWithoutNotes(Integer id);
+
+    public void setUserTimeZone(Message message);
+
+    public String getUserLang(Integer telegramUserId);
+
+    public  void setUserLang(String message, Integer telegramUserId);
 
 }

@@ -17,6 +17,7 @@ public class NotesDao implements INotesDao<Notes,Long>{
     private Session getSession() {
         return sessionFactory.getCurrentSession();
     }
+
     private Criteria getCriteria(Session session){
         return getSession().createCriteria(Notes.class);
     }
@@ -45,7 +46,7 @@ public class NotesDao implements INotesDao<Notes,Long>{
 
     @Override
     public void deleteAll() {
-        String hql = String.format("delete from %s","Notes");
+        String hql = String.format("delete from %localisation","Notes");
         Query q = getSession().createQuery(hql);
         q.executeUpdate();
     }

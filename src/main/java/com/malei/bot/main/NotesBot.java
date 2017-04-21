@@ -18,22 +18,23 @@ import org.telegram.telegrambots.exceptions.TelegramApiException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.*;
 
 import static com.malei.bot.key.KeyboardAdd.*;
-import static com.malei.bot.utilities.Utilities.checkingUserTime;
-import static com.malei.bot.utilities.Utilities.intToMonth;
-import static com.malei.bot.utilities.Utilities.monthToInt;
+import static com.malei.bot.utilities.Utilities.*;
 
 public class NotesBot extends TelegramLongPollingBot{
 
-    private static final int LOCATION_REQUEST = 0;
+    private static final int LOCATION_REQUEST = 12;
     private static final int LOCATION_PROCESSING = 10;
+    private static final int LANGUAGE_REQUEST = 0;
+    private static final int LANGUAGE_PROCESSING =11;
     private static final int MAIN_MENU = 1;
     private static final int CREATION_NOTE = 2;
     private static final int NOTE_CHOICE_DAY = 3;
@@ -44,10 +45,11 @@ public class NotesBot extends TelegramLongPollingBot{
     private static final int NOTES_MONTH = 8;
     private static final int NOTES_MONTH_DAY = 9;
 
+
+
     public NotesBot() {
         super();
         startNotes();
-
     }
 
     private ImplUserService userService;
@@ -64,12 +66,12 @@ public class NotesBot extends TelegramLongPollingBot{
     private void startNotes(){
         List<User> users=getUserService().getAllUser();
         for (User user:users) {
+            final String timeZone = getUserService().getUserTimeZone(user.getUserIdTelegram());
             List<Notes> notes = user.getNotes();
             for (Notes notes1:notes){
-                Long time;
-                DateTime now = new DateTime(DateTimeZone.forID(getUserService().getUserTimeZone(user.getUserIdTelegram())));
-                DateTime alert = new DateTime(notes1.getAlertDate(),DateTimeZone.forID(getUserService().getUserTimeZone(user.getUserIdTelegram())));
-                time = alert.getMillis()-now.getMillis();
+                DateTime now = new DateTime(DateTimeZone.forID(timeZone));
+                DateTime alert = new DateTime(notes1.getAlertDate(),DateTimeZone.forID(timeZone));
+                Long time = alert.getMillis()-now.getMillis();
                 sendMessageFuture(notes1.getChatId(),time,notes1.getId(),user.getUserIdTelegram());
             }
         }
@@ -80,7 +82,7 @@ public class NotesBot extends TelegramLongPollingBot{
         if(update.hasMessage()){
             try {
                 startBot(update.getMessage());
-            } catch (TelegramApiException e) {
+            } catch (TelegramApiException | UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         }else {
@@ -95,23 +97,30 @@ public class NotesBot extends TelegramLongPollingBot{
         }
     }
 
-    private void startBot(Message message) throws TelegramApiException{
+    private void startBot(Message message) throws TelegramApiException, UnsupportedEncodingException {
         if(message.hasText()||message.hasLocation()){
             if(!message.hasLocation()&&message.getText().equals("EDIT")){
                 System.out.println(message.getText());
             }
 
             final int step = getUserService().getStepUser(message.getFrom().getId(),message);
+            final String lang = getUserService().getUserLang(message.getFrom().getId());
             SendMessage sendMessageReq;
                 switch (step){
+                    case LANGUAGE_REQUEST:
+                        sendMessageReq=sendLangMess(message);
+                         break;
+                    case LANGUAGE_PROCESSING:
+                        sendMessageReq=sendProcLangMess(message);
+                        break;
                     case LOCATION_REQUEST:
                         sendMessageReq = sendLocMess(message);
                         break;
                     case LOCATION_PROCESSING:
-                        sendMessageReq = procLocMess(message);
+                        sendMessageReq = procLocMess(message,lang);
                         break;
                     case MAIN_MENU:
-                        sendMessageReq=sendMainMenuMsg(message);
+                        sendMessageReq=sendMainMenuMsg(message,lang);
                         break;
                     case CREATION_NOTE:
                         sendMessageReq=createNotes(message);
@@ -122,13 +131,13 @@ public class NotesBot extends TelegramLongPollingBot{
                     case NOTES_STEP_MINUTE:
                     case NOTES_MONTH:
                     case NOTES_MONTH_DAY:
-                        sendMessageReq=createNotesDate(message,step);
+                        sendMessageReq=createNotesDate(message,step,lang);
                         break;
                     case GET_ALL_NOTES:
-                        sendMessageReq=allNotes(message);
+                        sendMessageReq=allNotes(message,lang);
                         break;
                     default:
-                        sendMessageReq=sendStartMsg(message,getMainMenuKeyboard());
+                        sendMessageReq=sendStartMsg(message,getMainMenuKeyboard(lang));
                         break;
                 }
 
@@ -143,7 +152,6 @@ public class NotesBot extends TelegramLongPollingBot{
             SendMessage sendMessage = new SendMessage();
             Notes notes1 = getNotesService().getNotesByID(id);
             sendMessage.setText("\n"+"То о чем вы хотели не забыть:"+"\n"+"\n"+notes1.getTextNotes());
-            sendMessage.disableNotification();
             sendMessage.setChatId(chatId);
             sendMessage.enableMarkdown(true);
             InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
@@ -165,15 +173,43 @@ public class NotesBot extends TelegramLongPollingBot{
 
          getUserService().getUserNotesByTelegramId(userId).setStringScheduledFuture(id,scheduledFuture);
     }
+
+    private SendMessage sendLangMess(Message message){
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setText("s");
+        sendMessage.disableNotification();
+        sendMessage.setChatId(message.getChatId());
+        sendMessage.setReplyMarkup(getLangKeyboard());
+        getUserService().setStepUser(message.getFrom().getId(),LANGUAGE_PROCESSING);
+        return sendMessage;
+    }
+
+    private SendMessage sendProcLangMess(Message message) throws UnsupportedEncodingException {
+        SendMessage sendMessage = new SendMessage();
+        if(message.getText().equals("English")||message.getText().equals("Русский")){
+            sendMessage=sendLocMess(message);
+            getUserService().setStepUser(message.getFrom().getId(), LOCATION_PROCESSING);
+            if(message.getText().equals("English")) {
+                getUserService().setUserLang("en",message.getFrom().getId());
+            }else {
+                getUserService().setUserLang("ru",message.getFrom().getId());
+            }
+        }else {
+            sendLangMess(message);
+            getUserService().setStepUser(message.getFrom().getId(),LANGUAGE_REQUEST);
+        }
+        return sendMessage;
+    }
+
 /**
- * Начало работы отправка местоположения
+ * отправка местоположения
  */
-    private SendMessage sendLocMess(Message message){
+    private SendMessage sendLocMess(Message message) throws UnsupportedEncodingException {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setChatId(message.getChatId().toString());
         sendMessage.disableNotification();
-        sendMessage.setText("Нажми на кнопку");
+        sendMessage.setText(local("start","en"));
         sendMessage.setReplyMarkup(getLocKeyboard());
         getUserService().setStepUser(message.getFrom().getId(),LOCATION_PROCESSING);
         return sendMessage;
@@ -181,22 +217,23 @@ public class NotesBot extends TelegramLongPollingBot{
 /**
  *  обработка местоположения, отправка главного меню
  */
-    private SendMessage procLocMess(Message message){
+    private SendMessage procLocMess(Message message,String lang) throws UnsupportedEncodingException {
         SendMessage sendMessage;
         if (message.hasLocation()) {
-            sendMessage = sendStartMsg(message, getMainMenuKeyboard());
+            sendMessage = sendStartMsg(message, getMainMenuKeyboard(lang));
             getUserService().setUserTimeZone(message);
             getUserService().setStepUser(message.getFrom().getId(), MAIN_MENU);
         }
         else {
             sendMessage = sendLocMess(message);
+            getUserService().setStepUser(message.getFrom().getId(),LOCATION_REQUEST);
         }
         return sendMessage;
     }
 /**
  *  Создание уведомления по шагам
  */
-    private SendMessage  createNotesDate(Message message, int step){
+    private SendMessage  createNotesDate(Message message, int step, String lang) throws UnsupportedEncodingException {
         SendMessage sendMessage;
         switch (step){
             case NOTE_CHOICE_DAY:
@@ -206,7 +243,7 @@ public class NotesBot extends TelegramLongPollingBot{
                 sendMessage = hourNoteMes(message);
                 break;
             case NOES_FINAL:
-                sendMessage = notesFinalDate(message);
+                sendMessage = notesFinalDate(message,lang);
                 break;
             case NOTES_MONTH:
                 sendMessage = notesMonth(message);
@@ -430,7 +467,7 @@ public class NotesBot extends TelegramLongPollingBot{
         return sendMessage;
     }
 
-    private SendMessage notesFinalDate(Message message){
+    private SendMessage notesFinalDate(Message message,String lang) throws UnsupportedEncodingException {
         SendMessage  sendMessage = new SendMessage();
         if (message.getText().matches("^[0-9]+")&&message.getText().length()==2){
             List<Notes> notes =getUserService().getUserNotesByTelegramId(message.getFrom().getId()).getNotes();
@@ -447,7 +484,7 @@ public class NotesBot extends TelegramLongPollingBot{
             sendMessage.setChatId(message.getChatId().toString());
             sendMessage.disableNotification();
             sendMessage.setText("Напоминание добавлено");
-            sendMessage.setReplyMarkup(getMainMenuKeyboard());
+            sendMessage.setReplyMarkup(getMainMenuKeyboard(lang));
             getUserService().setStepUser(message.getFrom().getId(),MAIN_MENU);
             Long time1 = notes1.getAlertDate().getTime()- new DateTime(DateTimeZone.forID(getUserService().getUserTimeZone(message))).getMillis();
             sendMessageFuture(message.getChatId(),time1,notes1.getId(),message.getFrom().getId());
@@ -506,16 +543,19 @@ public class NotesBot extends TelegramLongPollingBot{
         return sendMessage;
     }
 
-    private SendMessage sendMainMenuMsg(Message message){
+    private SendMessage sendMainMenuMsg(Message message,String lang) throws UnsupportedEncodingException {
         SendMessage sendMessage;
-        if(message.getText().equals("Создать уведомление")){
+        System.out.println(message.getText());
+        System.out.println(local("button.create",lang));
+      //  System.out.println(Arrays.equals(message.getText().getBytes(), local("button.create",lang).getBytes()));
+        if(message.getText().equals(local("button.create",lang))){
             sendMessage = sendNotesMsg(message);
-        }else if(message.getText().equals("Настройки")){
+        }else if(message.getText().equals(local("button.settings",lang))){
             sendMessage = getAllNotes(message);
-        }else if (message.getText().equals("Все уведомления")) {
+        }else if (message.getText().equals(local("button.allnotes",lang))) {
             sendMessage = getAllNotes(message);
         }else {
-            sendMessage=sendStartMsg(message,getMainMenuKeyboard());
+            sendMessage=sendStartMsg(message,getMainMenuKeyboard(lang));
         }
         return sendMessage;
 
@@ -542,12 +582,12 @@ public class NotesBot extends TelegramLongPollingBot{
         return sendMessage;
     }
 
-    private SendMessage allNotes(Message message){
+    private SendMessage allNotes(Message message,String lang) throws UnsupportedEncodingException {
         SendMessage sendMessage;
         if(message.getText().equals("Назад")){
 
             getUserService().setStepUser(message.getFrom().getId(),MAIN_MENU);
-            sendMessage=sendStartMsg(message,getMainMenuKeyboard());
+            sendMessage=sendStartMsg(message,getMainMenuKeyboard(lang));
         }else {
             sendMessage=getAllNotes(message);
         }

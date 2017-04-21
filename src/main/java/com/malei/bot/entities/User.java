@@ -65,7 +65,7 @@ public class User implements Serializable {
     }
 
 
-    @OneToMany(cascade = CascadeType.ALL,mappedBy = "user",fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL,mappedBy = "user",fetch = FetchType.LAZY)
     public List<Notes> getNotes() {
         return notes;
     }
@@ -83,7 +83,7 @@ public class User implements Serializable {
         this.timeZone = timeZone;
     }
 
-    @Column(name = "USER")
+    @Column(name = "USER_LANG")
     public String getLocal() {
         return local;
     }
